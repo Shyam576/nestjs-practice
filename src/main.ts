@@ -20,6 +20,6 @@ async function bootstrap() {
 
   await app.listen(3000);
   console.log(`API Documentation : ${await app.getUrl()}/api`)
-  // console.log(`API Document is running on: ${await app.getUrl()}`);
+  
 }
 bootstrap();

@@ -27,7 +27,7 @@ export class AuthController {
     @ApiResponse({status: 200, description: 'Success'})
     async siginUser(
         @Body() authCredentialsDto:authCredentialsDto
-    ): Promise<UserEntity>{
+    ): Promise<{ accessToken : string}>{
         return await this.authService.signinUser(authCredentialsDto)
     }
 }
