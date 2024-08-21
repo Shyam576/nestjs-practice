@@ -3,8 +3,10 @@ import { AppModule } from './app.module';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 import { ValidationPipe } from '@nestjs/common';
 import { TransformInterceptor } from './transform.interceptor';
+import { Logger } from '@nestjs/common';
 
 async function bootstrap() {
+  const logger = new Logger();
   const app = await NestFactory.create(AppModule);
   app.useGlobalPipes(new ValidationPipe());
   app.useGlobalInterceptors(new TransformInterceptor());
@@ -22,5 +24,6 @@ async function bootstrap() {
 
   await app.listen(3000);
   console.log(`API Documentation : ${await app.getUrl()}/api`);
+  logger.log(`API Documentation : ${await app.getUrl()}/api`)
 }
 bootstrap();

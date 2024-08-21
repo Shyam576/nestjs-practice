@@ -16,7 +16,6 @@ import {
   ApiResponse,
   ApiTags,
 } from '@nestjs/swagger';
-import { TaskStatus } from '../constants/task-status.enum';
 import { CreateTaskDto } from './dto/create-task.dto';
 import { UpdateTaskDto } from './dto/update-task.dto';
 import { UpdateTaskStatusDto } from './dto/update-task-status.dto';
@@ -25,12 +24,14 @@ import { TaskEntity } from './task.entity';
 import { AuthGuard } from '@nestjs/passport';
 import { GetUser } from 'src/auth/get-user.decorator';
 import { UserEntity } from 'src/auth/user.entity';
+import { Logger } from '@nestjs/common';
 
 @ApiTags('tasks')
 @Controller('tasks')
 @ApiBearerAuth()
 @UseGuards(AuthGuard('jwt'))
 export class TasksController {
+  private logger = new Logger('TasksController');
   constructor(private tasksService: TasksService) {}
 
   @Post()
@@ -49,6 +50,9 @@ export class TasksController {
     @GetUser() user: UserEntity,
     @Query() getTasksFilterDto: getTasksFilterDto,
   ): Promise<TaskEntity[]> {
+    this.logger.verbose(
+      `User "${user.username}" retreiving all tasks. Filters: ${JSON.stringify(getTasksFilterDto)}`,
+    );
     return this.tasksService.getAllTasks(user, getTasksFilterDto);
   }
 

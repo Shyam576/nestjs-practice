@@ -1,17 +1,17 @@
 import { UserEntity } from 'src/auth/user.entity';
 import { getTasksFilterDto } from './dto/get-tasks-filter.dto';
-import { Injectable, Search } from '@nestjs/common';
+import { Injectable, InternalServerErrorException } from '@nestjs/common';
 import { TaskStatus } from '../constants/task-status.enum';
 import { CreateTaskDto } from './dto/create-task.dto';
 import { UpdateTaskDto } from './dto/update-task.dto';
 import { TaskNotFoundException } from './exceptions/task-not-found.exception';
 import { InjectRepository } from '@nestjs/typeorm';
 import { TaskEntity } from './task.entity';
-import { FindManyOptions, Like, Repository } from 'typeorm';
-import { UUID } from 'crypto';
-
+import { Repository } from 'typeorm';
+import { Logger } from '@nestjs/common';
 @Injectable()
 export class TasksService {
+  private logger = new Logger('TaskService');
   constructor(
     @InjectRepository(TaskEntity)
     private taskRepository: Repository<TaskEntity>,
@@ -38,8 +38,16 @@ export class TasksService {
       );
     }
 
-    const tasks = await query.getMany();
-    return tasks;
+    try {
+      const tasks = await query.getMany();
+      return tasks;
+    } catch (e) {
+      this.logger.error(
+        `Failed to get tasks for user : "${user.username}". Filters : ${JSON.stringify(getTasksFilterDto)}`,
+        e.stack,
+      );
+      throw new InternalServerErrorException();
+    }
   }
 
   async createTask(
@@ -107,7 +115,7 @@ export class TasksService {
   }
 
   async deleteTask(id: string, user: UserEntity) {
-    const result = await this.taskRepository.delete({id, user});
+    const result = await this.taskRepository.delete({ id, user });
 
     if (result.affected === 0) {
       throw new TaskNotFoundException(`Task not found for ID: ${id}`);
