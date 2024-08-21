@@ -46,9 +46,10 @@ export class TasksController {
   @ApiOperation({ summary: 'Get tasks' })
   @ApiResponse({ status: 200, description: 'Successfully retrieved tasks' })
   getAllTask(
+    @GetUser() user: UserEntity,
     @Query() getTasksFilterDto: getTasksFilterDto,
   ): Promise<TaskEntity[]> {
-    return this.tasksService.getAllTasks(getTasksFilterDto);
+    return this.tasksService.getAllTasks(user, getTasksFilterDto);
   }
 
   @Get('get-task')
@@ -61,8 +62,11 @@ export class TasksController {
   @Get(':id')
   @ApiOperation({ summary: 'Get task by ID' })
   @ApiResponse({ status: 200, description: 'Task retrieved successfully' })
-  getTaskByid(@Param('id') id: string): Promise<TaskEntity> {
-    return this.tasksService.getTaskById(id);
+  getTaskByi(
+    @Param('id') id: string,
+    @GetUser() user: UserEntity,
+  ): Promise<TaskEntity> {
+    return this.tasksService.getTaskById(id, user);
   }
 
   @Patch(':id')
@@ -81,15 +85,16 @@ export class TasksController {
   updateTaskStatus(
     @Param('id') id: string,
     @Body() updateTaskStatusDto: UpdateTaskStatusDto,
+    @GetUser() user: UserEntity,
   ): Promise<TaskEntity> {
     const { status } = updateTaskStatusDto;
-    return this.tasksService.updateTaskStatus(id, status);
+    return this.tasksService.updateTaskStatus(id, status, user);
   }
 
   @Delete(':id')
   @ApiOperation({ summary: 'Delete a task' })
   @ApiResponse({ status: 200, description: 'Task deleted successfully' })
-  deleteTask(@Param('id') id: string) {
-    return this.tasksService.deleteTask(id);
+  deleteTask(@Param('id') id: string, @GetUser() user: UserEntity) {
+    return this.tasksService.deleteTask(id, user);
   }
 }

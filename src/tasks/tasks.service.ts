@@ -18,26 +18,28 @@ export class TasksService {
   ) {}
 
   async getAllTasks(
+    user: UserEntity,
     getTasksFilterDto: getTasksFilterDto,
   ): Promise<TaskEntity[]> {
     const { status, search } = getTasksFilterDto;
 
-    // Construct the FindManyOptions object
-    const options: FindManyOptions<TaskEntity> = {};
+    const query = this.taskRepository
+      .createQueryBuilder('task')
+      .where({ user });
 
     if (status) {
-      options.where = { status };
+      query.andWhere('task.status = :status', { status });
     }
 
     if (search) {
-      options.where = {
-        ...options.where,
-        title: Like(`%${search}%`),
-        description: Like(`%${search}%`),
-      };
+      query.andWhere(
+        '(LOWER(task.title) LIKE LOWER(:search) OR LOWER(task.description) LIKE LOWER(:search))',
+        { search: `%${search}%` },
+      );
     }
 
-    return this.taskRepository.find(options);
+    const tasks = await query.getMany();
+    return tasks;
   }
 
   async createTask(
@@ -57,9 +59,9 @@ export class TasksService {
     return taskEntity;
   }
 
-  async getTaskById(id: string): Promise<TaskEntity> {
+  async getTaskById(id: string, user: UserEntity): Promise<TaskEntity> {
     const taskEntity = await this.taskRepository.findOne({
-      where: { id: id },
+      where: { id: id, user: user },
     });
 
     if (!taskEntity) {
@@ -83,24 +85,29 @@ export class TasksService {
     return updatedTask;
   }
 
-  async updateTaskStatus(id: string, status: TaskStatus): Promise<TaskEntity> {
+  async updateTaskStatus(
+    id: string,
+    status: TaskStatus,
+    user: UserEntity,
+  ): Promise<TaskEntity> {
     const task = await this.taskRepository.findOne({
       where: {
         id: id,
+        user: user,
       },
     });
 
     if (!task) {
       throw new TaskNotFoundException(`Task with ${id} not found`);
     }
-    const updatedTaskStatus = await this.taskRepository.update(id, {
+    await this.taskRepository.update(id, {
       status: status,
     });
     return task;
   }
 
-  async deleteTask(id: string) {
-    const result = await this.taskRepository.delete(id);
+  async deleteTask(id: string, user: UserEntity) {
+    const result = await this.taskRepository.delete({id, user});
 
     if (result.affected === 0) {
       throw new TaskNotFoundException(`Task not found for ID: ${id}`);
