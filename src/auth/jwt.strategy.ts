@@ -1,3 +1,4 @@
+import { ConfigService } from '@nestjs/config';
 import { Injectable, UnauthorizedException } from "@nestjs/common";
 import { PassportStrategy } from "@nestjs/passport";
 import { InjectRepository } from "@nestjs/typeorm";
@@ -11,9 +12,10 @@ export class JwtStartegy extends PassportStrategy(Strategy) {
     constructor(
         @InjectRepository(UserEntity)
         private userRepository: Repository<UserEntity>,
+        private configService : ConfigService,
     ){
         super({
-            secretOrKey : 'topSecret51',
+            secretOrKey : configService.get('JWT_SECRET'),
             jwtFromRequest : ExtractJwt.fromAuthHeaderAsBearerToken()
         })
     }
